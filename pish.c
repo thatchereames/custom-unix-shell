@@ -92,14 +92,20 @@ int pish(FILE *fp)
     struct pish_arg *arg = malloc(sizeof(struct pish_arg));
 
     while (prompt() && fgets(buf, sizeof(buf), fp)) {
-        //Not sure if this is the correct implementation but it is along this idea 🫡
         parse_command(buf, arg);
         if(arg->argc == 0) ;
-        else if(!strcmp(arg->argv[0], "exit")) break;
-        else if(!strcmp(arg->argv[0], "cd")) {
-            if(chdir(arg->argv[1]) != 0) perror("cd");
+        else if(!strcmp(arg->argv[0], "exit")) {
+            if(arg->argc != 1) usage_error();
+            else break;
         }
-        else if(!strcmp(arg->argv[0], "history")) printf("History will be implemented later :(\n");
+        else if(!strcmp(arg->argv[0], "cd")) {
+            if(arg->argc != 2) usage_error();
+            else if(chdir(arg->argv[1]) != 0) perror("cd");
+        }
+        else if(!strcmp(arg->argv[0], "history")) {
+            if (arg->argc != 1) usage_error;
+            else printf("History will be implemented later :(\n");
+        }
         else run(arg);
     }
     return 0;
