@@ -81,7 +81,7 @@ int pish(FILE *fp)
 {
     // assume input does not exceed buffer size
     char buf[1024];
-    struct pish_arg arg;
+    struct pish_arg *arg = malloc(sizeof(struct pish_arg));
 
     /* TODO:
      * Figure out how to read input and run commands on a loop.
@@ -94,7 +94,17 @@ int pish(FILE *fp)
 
      * The [TODO] is where you read a line from `fp` into `buf`.
      */
-
+    while (prompt() && fgets(buf, sizeof(buf), fp)) {
+        //Not sure if this is the correct implementation but it is along this idea 🫡
+        parse_command(buf, arg);
+        if(arg->argc == 0) ;
+        else if(!strcmp(arg->argv[0], "exit")) break;
+        else if(!strcmp(arg->argv[0], "cd")) {
+            if(chdir(arg->argv[1]) != 0) perror("cd");
+        }
+        else if(!strcmp(arg->argv[0], "history")) printf("History will be implemented later :(\n");
+        else run(arg);
+    }
     return 0;
 }
 
@@ -109,12 +119,22 @@ int main(int argc, char *argv[])
      *   as the file path to read from.
      * - If the shell is run with 2+ arguments, call usage_error() and exit.
      */
-
+    
+    if(argc == 1) {
+        fp = stdin;
+        script_mode = 0;
+    }
+    else if(argc == 2) {
+        fp = fopen(argv[1], "r");
+        if (fp == NULL) {
+            perror("open");
+            return EXIT_FAILURE;
+        }
+        script_mode = 1;
+    } else usage_error();
+    
     pish(fp);
 
-    /* TODO:
-     * close fp if it is not stdin.
-     */
-
+    if(script_mode) fclose(fp);
     return EXIT_SUCCESS;
 }
