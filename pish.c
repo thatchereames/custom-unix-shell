@@ -9,6 +9,8 @@
 
 #include "pish.h"
 
+#define CHAR_SEPERATORS " \n \t "
+
 /*
  * Batch mode flag. If set to 0, the shell reads from stdin. If set to 1,
  * the shell reads from a file from argv[1].
@@ -46,9 +48,15 @@ void usage_error(void)
  */
 void parse_command(char *command, struct pish_arg *arg)
 {
-    // TODO
-    // 1. Clear out the arg struct
-    // 2. Parse the `command` buffer and update arg->argc & arg->argv.
+    char *token = strtok(command, CHAR_SEPERATORS);
+    int i;
+    for(i = 0; token != NULL; i++) {
+        arg->argv[i] = malloc((strlen(token) + 1) * sizeof(char));
+        strcpy(arg->argv[i], token);
+        token = strtok(NULL, CHAR_SEPERATORS);
+    }
+    arg->argv[i+1] = NULL;
+    arg->argc = i;
 }
 
 /*
