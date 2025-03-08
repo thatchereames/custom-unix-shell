@@ -55,7 +55,7 @@ void parse_command(char *command, struct pish_arg *arg)
         strcpy(arg->argv[i], token);
         token = strtok(NULL, CHAR_SEPERATORS);
     }
-    arg->argv[i+1] = NULL;
+    arg->argv[i] = NULL;
     arg->argc = i;
 }
 
@@ -70,7 +70,15 @@ void parse_command(char *command, struct pish_arg *arg)
  */
 void run(struct pish_arg *arg)
 {
-    // TODO
+    int pid = fork();
+    if(pid == 0) {
+        execvp(arg->argv[0], arg->argv);
+        perror("pish");
+    } else if(pid  > 0) {
+        wait(NULL);
+    } else {
+        perror("fork");
+    }
 }
 
 /*
@@ -83,17 +91,6 @@ int pish(FILE *fp)
     char buf[1024];
     struct pish_arg *arg = malloc(sizeof(struct pish_arg));
 
-    /* TODO:
-     * Figure out how to read input and run commands on a loop.
-     * It should look something like:
-
-            while (prompt() && [TODO] {
-                parse_command(buf, &arg);
-                run(&arg);
-            }
-
-     * The [TODO] is where you read a line from `fp` into `buf`.
-     */
     while (prompt() && fgets(buf, sizeof(buf), fp)) {
         //Not sure if this is the correct implementation but it is along this idea 🫡
         parse_command(buf, arg);
@@ -111,14 +108,6 @@ int pish(FILE *fp)
 int main(int argc, char *argv[])
 {
     FILE *fp;
-
-    /* TODO: 
-     * Set up fp to either stdin or an open file.
-     * - If the shell is run without argument (argc == 1), use stdin.
-     * - If the shell is run with 1 argument (argc == 2), use that argument
-     *   as the file path to read from.
-     * - If the shell is run with 2+ arguments, call usage_error() and exit.
-     */
     
     if(argc == 1) {
         fp = stdin;
