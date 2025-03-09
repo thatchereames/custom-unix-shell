@@ -10,6 +10,7 @@
 #include "pish.h"
 
 #define CHAR_SEPERATORS " \n \t "
+#define HISTORY_FILE ".pish_history"
 
 /*
  * Batch mode flag. If set to 0, the shell reads from stdin. If set to 1,
@@ -87,27 +88,52 @@ void run(struct pish_arg *arg)
  */
 int pish(FILE *fp)
 {
-    // assume input does not exceed buffer size
     char buf[1024];
     struct pish_arg *arg = malloc(sizeof(struct pish_arg));
+    FILE *history;
+    //Prepares to add to history if pish called in command mode
+    if(!script_mode) history = fopen(HISTORY_FILE, "a");
 
     while (prompt() && fgets(buf, sizeof(buf), fp)) {
         parse_command(buf, arg);
         if(arg->argc == 0) ;
         else if(!strcmp(arg->argv[0], "exit")) {
             if(arg->argc != 1) usage_error();
-            else break;
+            else {
+                if(!script_mode) fprintf(history, "%s\n", arg->argv[0]);
+                break;
+            }
         }
         else if(!strcmp(arg->argv[0], "cd")) {
             if(arg->argc != 2) usage_error();
             else if(chdir(arg->argv[1]) != 0) perror("cd");
+            else if (!script_mode) fprintf(history, "%s %s\n", arg->argv[0], arg->argv[1]);
         }
         else if(!strcmp(arg->argv[0], "history")) {
-            if (arg->argc != 1) usage_error;
-            else printf("History will be implemented later :(\n");
+            if (arg->argc != 1) usage_error();
+            else {
+                fprintf(history, "%s\n", arg->argv[0]);
+                fflush(history);
+                FILE *print_history = fopen(HISTORY_FILE, "r");
+                if(print_history == NULL) printf("History did not open");
+                char buf2[1024];
+                int index = 1;
+                while(fgets(buf2, sizeof(buf2), print_history)) {
+                    printf("%d %s", index , buf2);\
+                    index++;
+                }
+            }
         }
-        else run(arg);
+        else {
+            run(arg);
+            fprintf(history, "%s", arg->argv[0]);
+            for(int j = 1; j < arg->argc; j++) {
+                fprintf(history, " %s", arg->argv[j]);
+            }
+            fprintf(history, "\n");
+        }
     }
+    if(!script_mode) fclose(history);
     return 0;
 }
 
