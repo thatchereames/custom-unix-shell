@@ -100,7 +100,10 @@ int pish(FILE *fp)
         else if(!strcmp(arg->argv[0], "exit")) {
             if(arg->argc != 1) usage_error();
             else {
-                if(!script_mode) fprintf(history, "%s\n", arg->argv[0]);
+                if(!script_mode) {
+                    fprintf(history, "%s\n", arg->argv[0]);
+                }
+                free(arg->argv[0]);
                 break;
             }
         }
@@ -132,8 +135,14 @@ int pish(FILE *fp)
             }
             fprintf(history, "\n");
         }
+
+        for(int j = 0; arg->argv[j] != NULL; j++) {
+            free(arg->argv[j]);
+            arg->argv[j] = NULL;
+        }
     }
     if(!script_mode) fclose(history);
+    free(arg);
     return 0;
 }
 
