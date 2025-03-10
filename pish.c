@@ -75,6 +75,7 @@ void run(struct pish_arg *arg)
     if(pid == 0) {
         execvp(arg->argv[0], arg->argv);
         perror("pish");
+        //exit(EXIT_FAILURE);
     } else if(pid  > 0) {
         wait(NULL);
     } else {
@@ -90,9 +91,11 @@ int pish(FILE *fp)
 {
     char buf[1024];
     struct pish_arg *arg = malloc(sizeof(struct pish_arg));
+    /*
     FILE *history;
     //Prepares to add to history if pish called in command mode
-    if(!script_mode) history = fopen(HISTORY_FILE, "a");
+    if(!script_mode) history = fopen(HISTORY_FILE, "w");
+    */
 
     while (prompt() && fgets(buf, sizeof(buf), fp)) {
         parse_command(buf, arg);
@@ -101,7 +104,8 @@ int pish(FILE *fp)
             if(arg->argc != 1) usage_error();
             else {
                 if(!script_mode) {
-                    fprintf(history, "%s\n", arg->argv[0]);
+                    //fprintf(history, "%s\n", arg->argv[0]);
+                    add_history(arg);
                 }
                 free(arg->argv[0]);
                 break;
@@ -110,11 +114,13 @@ int pish(FILE *fp)
         else if(!strcmp(arg->argv[0], "cd")) {
             if(arg->argc != 2) usage_error();
             else if(chdir(arg->argv[1]) != 0) perror("cd");
-            else if (!script_mode) fprintf(history, "%s %s\n", arg->argv[0], arg->argv[1]);
+            else if (!script_mode) add_history(arg);
+            //fprintf(history, "%s %s\n", arg->argv[0], arg->argv[1]);
         }
         else if(!strcmp(arg->argv[0], "history")) {
             if (arg->argc != 1) usage_error();
             else {
+                /*
                 fprintf(history, "%s\n", arg->argv[0]);
                 fflush(history);
                 FILE *print_history = fopen(HISTORY_FILE, "r");
@@ -125,15 +131,21 @@ int pish(FILE *fp)
                     printf("%d %s", index , buf2);\
                     index++;
                 }
+                */
+               add_history(arg);
+               print_history();
             }
         }
         else {
+            add_history(arg);
             run(arg);
+            /*
             fprintf(history, "%s", arg->argv[0]);
             for(int j = 1; j < arg->argc; j++) {
                 fprintf(history, " %s", arg->argv[j]);
             }
             fprintf(history, "\n");
+            */
         }
 
         for(int j = 0; arg->argv[j] != NULL; j++) {
@@ -141,7 +153,7 @@ int pish(FILE *fp)
             arg->argv[j] = NULL;
         }
     }
-    if(!script_mode) fclose(history);
+    //if(!script_mode) fclose(history);
     free(arg);
     return 0;
 }

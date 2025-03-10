@@ -21,17 +21,22 @@ static void set_history_path()
 
 void add_history(const struct pish_arg *arg)
 {
+    FILE *history_file;
     // set history path if needed
     if (!(*pish_history_path)) {
         set_history_path();
     }
 
-    /* 
-     * TODO:
-     * - open (and create if needed) history file at pish_history_path.
-     * - write out the command stored in `arg`; argv values are separated
-     *   by a space.
-     */
+    history_file = fopen(pish_history_path, "a");
+    if(history_file == NULL) {
+        history_file = fopen(pish_history_path, "w");
+    }
+    fprintf(history_file, "%s", arg->argv[0]);
+    for(int j = 1; j < arg->argc; j++) {
+        fprintf(history_file, " %s", arg->argv[j]);
+    }
+    fprintf(history_file, "\n");
+    fclose(history_file);
 }
 
 void print_history()
@@ -41,5 +46,15 @@ void print_history()
         set_history_path();
     }
 
-    /* TODO: read history file and print with index */
+    FILE *print_history = fopen(pish_history_path, "r");
+    if(print_history == NULL) printf("History did not open");
+    char buf2[1024];
+    int index = 1;
+    while(fgets(buf2, sizeof(buf2), print_history)) {
+        printf("%d %s", index , buf2);
+        index++;
+    }
+
+
+    fclose(print_history);
 }
