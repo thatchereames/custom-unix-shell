@@ -75,7 +75,7 @@ void run(struct pish_arg *arg)
     if(pid == 0) {
         execvp(arg->argv[0], arg->argv);
         perror("pish");
-        //exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     } else if(pid  > 0) {
         wait(NULL);
     } else {
@@ -104,7 +104,6 @@ int pish(FILE *fp)
             if(arg->argc != 1) usage_error();
             else {
                 if(!script_mode) {
-                    //fprintf(history, "%s\n", arg->argv[0]);
                     add_history(arg);
                 }
                 free(arg->argv[0]);
@@ -115,23 +114,10 @@ int pish(FILE *fp)
             if(arg->argc != 2) usage_error();
             else if(chdir(arg->argv[1]) != 0) perror("cd");
             else if (!script_mode) add_history(arg);
-            //fprintf(history, "%s %s\n", arg->argv[0], arg->argv[1]);
         }
         else if(!strcmp(arg->argv[0], "history")) {
             if (arg->argc != 1) usage_error();
             else {
-                /*
-                fprintf(history, "%s\n", arg->argv[0]);
-                fflush(history);
-                FILE *print_history = fopen(HISTORY_FILE, "r");
-                if(print_history == NULL) printf("History did not open");
-                char buf2[1024];
-                int index = 1;
-                while(fgets(buf2, sizeof(buf2), print_history)) {
-                    printf("%d %s", index , buf2);\
-                    index++;
-                }
-                */
                add_history(arg);
                print_history();
             }
@@ -139,13 +125,6 @@ int pish(FILE *fp)
         else {
             add_history(arg);
             run(arg);
-            /*
-            fprintf(history, "%s", arg->argv[0]);
-            for(int j = 1; j < arg->argc; j++) {
-                fprintf(history, " %s", arg->argv[j]);
-            }
-            fprintf(history, "\n");
-            */
         }
 
         for(int j = 0; arg->argv[j] != NULL; j++) {
@@ -153,7 +132,7 @@ int pish(FILE *fp)
             arg->argv[j] = NULL;
         }
     }
-    //if(!script_mode) fclose(history);
+    
     free(arg);
     return 0;
 }
