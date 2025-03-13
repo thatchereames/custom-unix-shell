@@ -152,8 +152,10 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
         script_mode = 1;
-    } else usage_error();
-    
+    } else {
+        usage_error();
+        exit(EXIT_FAILURE);
+    }
     pish(fp);
 
     if(script_mode) fclose(fp);
